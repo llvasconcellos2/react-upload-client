@@ -1,3 +1,5 @@
+import { UploadWidget } from "./components/upload-widget/upload-widget";
+
 export function App() {
-  return <h1>hello world</h1>;
+  return <UploadWidget />;
 }
