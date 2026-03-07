@@ -48,7 +48,7 @@ export function UploadWidgetDropZone() {
           </>
         )}
       </div>
-      <span className="text-xxs">Apenas arquivos PNG e JPG.</span>
+      <span className="text-xxs text-zinc-400">Apenas arquivos PNG e JPG.</span>
     </div>
   );
 }

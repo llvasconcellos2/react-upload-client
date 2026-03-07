@@ -18,7 +18,13 @@
 }
 
 .text-xxs {
-  font-size: 0.625rem /* 10px */;
+  font-size: 0.625rem;
+}
+
+@property --border-angle {
+  inherits: false;
+  initial-value: 0deg;
+  syntax: "<angle>";
 }
 
 @theme {
@@ -29,4 +35,15 @@
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
+
+  --animate-border: progress-border 2s linear infinite;
+
+  @keyframes progress-border {
+    0% {
+      --border-angle: 0deg;
+    }
+    100% {
+      --border-angle: 360deg;
+    }
+  }
 }
