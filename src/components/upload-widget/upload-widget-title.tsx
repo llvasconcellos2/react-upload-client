@@ -1,8 +1,8 @@
 import { UploadCloud } from "lucide-react";
+import { usePendingUploads } from "../../store/uploads";
 
 export function UploadWidgetTitle() {
-  const hasPendingUploads = true;
-  const globalUploadPercentage = 66;
+  const { hasPendingUploads, globalUploadPercentage } = usePendingUploads();
   return (
     <div className="text-xs font-medium flex items-center gap-1.5">
       <UploadCloud className="size-4 text-zinc-400" />

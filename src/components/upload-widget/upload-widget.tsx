@@ -3,10 +3,11 @@ import { UploadWidgetDropZone } from "./upload-widget-dropzone";
 import { UploadWidgetUploadList } from "./upload-widget-upload-list";
 import { AnimateHeight } from "../ui/animate-height";
 import { UploadWidgetHeader } from "./upload-widget-header";
+import { usePendingUploads } from "../../store/uploads";
 
 export function UploadWidget() {
   const [isOpen, setIsOpen] = useState(true);
-  const hasPendingUploads = true;
+  const { hasPendingUploads } = usePendingUploads();
 
   return (
     <div
