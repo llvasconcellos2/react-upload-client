@@ -4,6 +4,7 @@ import { useShallow } from "zustand/react/shallow";
 import { enableMapSet } from "immer";
 import { uploadFileToStorage } from "../http/upload-file-to-storage";
 import { CanceledError } from "axios";
+import { compressImage } from "../utils/compress-image";
 
 export type Upload = {
   name: string;
@@ -11,7 +12,9 @@ export type Upload = {
   abortController: AbortController;
   status: "progress" | "success" | "error" | "canceled";
   originalByteSize: number;
+  compressedByteSize?: number;
   bytesSent: number;
+  remoteUrl?: string;
 };
 
 type UploadsState = {
@@ -39,11 +42,21 @@ export const useUploads = create<UploadsState, [["zustand/immer", never]]>(
 
       if (!upload) return;
 
-      let status: "progress" | "success" | "error" | "canceled" = "progress";
       try {
-        await uploadFileToStorage(
+        const compressedFile = await compressImage({
+          file: upload.file,
+          maxWidth: 1000,
+          maxHeight: 1000,
+          quality: 0.8,
+        });
+
+        updateUpload(uploadId, {
+          compressedByteSize: compressedFile.size,
+        });
+
+        const { url } = await uploadFileToStorage(
           {
-            file: upload.file,
+            file: compressedFile,
             onProgress: (numBytes) => {
               updateUpload(uploadId, {
                 status: "progress",
@@ -53,18 +66,21 @@ export const useUploads = create<UploadsState, [["zustand/immer", never]]>(
           },
           { signal: upload.abortController.signal },
         );
-        status = "success";
+        updateUpload(uploadId, {
+          status: "success",
+          remoteUrl: url,
+        });
       } catch (error) {
         //TODO: handle errors
         if (error instanceof CanceledError) {
-          status = "canceled";
+          updateUpload(uploadId, {
+            status: "canceled",
+          });
         } else {
-          status = "error";
+          updateUpload(uploadId, {
+            status: "error",
+          });
         }
-      } finally {
-        updateUpload(uploadId, {
-          status: status,
-        });
       }
     }
 
@@ -120,10 +136,12 @@ export const usePendingUploads = () => {
       }
 
       const { total, uploaded } = Array.from(store.uploads.values()).reduce(
-        (accumulator, upload, index, array) => {
-          accumulator.total += upload.originalByteSize;
-          accumulator.uploaded += upload.bytesSent;
-
+        (accumulator, upload) => {
+          if (upload.compressedByteSize) {
+            accumulator.uploaded += upload.bytesSent;
+          }
+          accumulator.total +=
+            upload.compressedByteSize || upload.originalByteSize;
           return accumulator;
         },
         { total: 0, uploaded: 0 },

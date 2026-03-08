@@ -13,7 +13,9 @@ export function UploadWidgetUploadItem({ upload, uploadId }: UploadItemProps) {
   const cancelUpload = useUploads((state) => state.cancelUpload);
 
   const progress = Math.min(
-    Math.round((upload.bytesSent * 100) / upload.originalByteSize),
+    upload.compressedByteSize
+      ? Math.round((upload.bytesSent * 100) / upload.compressedByteSize)
+      : 0,
     100,
   );
 
@@ -22,7 +24,7 @@ export function UploadWidgetUploadItem({ upload, uploadId }: UploadItemProps) {
       <div className="flex flex-col gap-1">
         <span className="text-xxs font-medium flex items-center gap-1">
           <ImageUp className="size-3 text-zinc-300" />
-          <span>{upload.name}</span>
+          <span className="max-w-[200px] truncate">{upload.name}</span>
         </span>
         <div className="text-xxs text-zinc-400 flex gap-1.5 items-center">
           <span className="line-through">
@@ -30,8 +32,18 @@ export function UploadWidgetUploadItem({ upload, uploadId }: UploadItemProps) {
           </span>
           <span className="size-1 rounded-full bg-zinc-700" />
           <span>
-            300 KB
-            <span className="text-green-400 ml-1">-94%</span>
+            {formatFileSize(upload.compressedByteSize ?? 0)}
+            {upload.compressedByteSize && (
+              <span className="text-green-400 ml-1">
+                -
+                {Math.round(
+                  ((upload.originalByteSize - upload.compressedByteSize) *
+                    100) /
+                    upload.originalByteSize,
+                )}
+                %
+              </span>
+            )}
           </span>
           <span className="size-1 rounded-full bg-zinc-700" />
           {upload.status === "success" && <span>100%</span>}
@@ -55,20 +67,26 @@ export function UploadWidgetUploadItem({ upload, uploadId }: UploadItemProps) {
         />
       </Progress.Root>
 
-      <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
+      <div className="absolute top-2 right-2 flex items-center gap-1">
         <Button
           title="Download da imagem comprimida"
           size="icon-sm"
-          disabled={upload.status !== "success"}
+          aria-disabled={upload.status !== "success"}
+          asChild
         >
-          <Download className="size-3" />
-          <span className="sr-only">Download da imagem comprimida</span>
+          <a href={upload.remoteUrl} download>
+            <Download className="size-3" />
+            <span className="sr-only">Download da imagem comprimida</span>
+          </a>
         </Button>
 
         <Button
           title="Copiar URL da Imagem"
           size="icon-sm"
-          disabled={upload.status !== "success"}
+          disabled={!upload.remoteUrl}
+          onClick={() =>
+            upload.remoteUrl && navigator.clipboard.writeText(upload.remoteUrl)
+          }
         >
           <Link2 className="size-3" />
           <span className="sr-only">Copiar URL da Imagem</span>
