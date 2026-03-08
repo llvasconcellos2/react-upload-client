@@ -3,6 +3,7 @@ import { Download, ImageUp, Link2, RefreshCcw, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useUploads, type Upload } from "../../store/uploads";
 import { formatFileSize } from "../../utils/format-file-size";
+import { downloadUrl } from "../../utils/download-url";
 
 interface UploadItemProps {
   upload: Upload;
@@ -11,6 +12,7 @@ interface UploadItemProps {
 
 export function UploadWidgetUploadItem({ upload, uploadId }: UploadItemProps) {
   const cancelUpload = useUploads((state) => state.cancelUpload);
+  const retryUpload = useUploads((state) => state.retryUpload);
 
   const progress = Math.min(
     upload.compressedByteSize
@@ -71,10 +73,11 @@ export function UploadWidgetUploadItem({ upload, uploadId }: UploadItemProps) {
         <Button
           title="Download da imagem comprimida"
           size="icon-sm"
-          aria-disabled={upload.status !== "success"}
+          aria-disabled={!upload.remoteUrl}
           asChild
+          onClick={() => upload.remoteUrl && downloadUrl(upload.remoteUrl)}
         >
-          <a href={upload.remoteUrl} download>
+          <a>
             <Download className="size-3" />
             <span className="sr-only">Download da imagem comprimida</span>
           </a>
@@ -96,6 +99,7 @@ export function UploadWidgetUploadItem({ upload, uploadId }: UploadItemProps) {
           title="Tentar novamente o upload"
           size="icon-sm"
           disabled={!["canceled", "error"].includes(upload.status)}
+          onClick={() => retryUpload(uploadId)}
         >
           <RefreshCcw className="size-3" />
           <span className="sr-only">Tentar novamente o upload</span>
